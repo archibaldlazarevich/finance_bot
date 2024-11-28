@@ -1,41 +1,36 @@
 import asyncio
 import logging
-import sys
-from os import getenv
-from dotenv import load_dotenv
+
+from aiogram import Bot, Dispatcher
+from handlers.default.start import router_start
+from handlers.default.get_photo import router_get_photo
+from handlers.default.photo_id import router_photo_id
+from handlers.default.text_answer import router_answer
+from handlers.default.help import router_help
+from handlers.default.reg import reg_router
+from handlers.default.currency import currency_router
+
+from config.config import BOT_TOKEN
 
 
-from aiogram import Bot, Dispatcher, html
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart
-from aiogram.types import Message
-
-load_dotenv()
-
-TOKEN = getenv('BOT_TOKEN')
-
-dp = Dispatcher()
-
-@dp.message(CommandStart())
-async def command_start(message: Message) -> None:
-    await message.answer(
-        'Здравствуйте, этот бот предоставляет информацию об офинициальных курсах валю НБРБ,'
-        ' и данные по наилучшему обмену валют с сайту myfin.by')
-
-
-@dp.message()
-async def echo_handler(message: Message) -> None:
-    try:
-        await message.send_copy(chat_id=message.chat.id)
-    except TypeError:
-        await message.answer('Nice try!')
-
-async def main() -> None:
-    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+async def main():
+    bot = Bot(token=BOT_TOKEN)
+    dp = Dispatcher()
+    dp.include_routers(
+        router_answer,
+        router_help,
+        router_photo_id,
+        router_start,
+        router_get_photo,
+        reg_router,
+        currency_router
+    )
     await dp.start_polling(bot)
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-    asyncio.run(main())
+    logging.basicConfig(level=logging.INFO)
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print('Exit')
